@@ -7,14 +7,6 @@ import {
   getSprite, createSpray, particlePos, drawTarget,
 } from './utils/spray.js'
 
-
-/* =====================================================================
-   Angély Parfums — Cinematic perfume intro → login
-   Seluruh partikel digambar di SATU canvas. Kamera virtual (camX, camY,
-   zoom) yang bergerak; partikel tidak pernah bergerak ke arah kamera.
-   React hanya menyimpan state scene (5 kali berubah), bukan per-frame.
-   ===================================================================== */
-
 const MQ = '(max-width: 720px), (max-aspect-ratio: 4/5)'
 
 /* ------------------------------- app ------------------------------- */
@@ -59,9 +51,16 @@ export default function App() {
       c.height = Math.round(H * dpr)
       view.current = { W, H, dpr }
       const small = window.matchMedia(MQ).matches
+      // HP/portrait: botol sedikit digeser ke kiri supaya ada ruang untuk semprotan di kanan
+      const anchor = small ? 0.46 : 0.5
       // konten terlihat setinggi ~600 unit (lampu -> alas); boleh >1 supaya botol lebih besar
-      const s = Math.min(1.6, small ? (W * 0.88) / 360 : (W * 0.5) / 360, (H * 0.84) / 600)
+      let s = Math.min(1.6, small ? (W * 0.88) / 360 : (W * 0.5) / 360, (H * 0.84) / 600)
+      // alas selebar 300 unit (setengahnya 150) tidak boleh keluar dari tepi layar kiri/kanan
+      const halfPedestal = 150
+      const margin = 14
+      s = Math.min(s, (W * Math.min(anchor, 1 - anchor) - margin) / halfPedestal)
       displayRef.current.style.setProperty('--ds', s.toFixed(4))
+      displayRef.current.style.setProperty('--ax', `${anchor * 100}%`)
     }
     getSprite() // siapkan sprite sebelum animasi mulai
     onResize()
