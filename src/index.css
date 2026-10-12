@@ -179,13 +179,18 @@ body {
 .hl { inset: auto; border-radius: 50%; }
 .hl1 { left: 40px; top: 44px; width: 78px; height: 20px; transform: rotate(-28deg); background: radial-gradient(ellipse, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 70%); }
 .hl2 { right: 34px; top: 66px; width: 40px; height: 12px; transform: rotate(32deg); background: radial-gradient(ellipse, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 70%); }
-.sheen {
+.sheen { mix-blend-mode: screen; overflow: hidden; }
+/* kilau digerakkan dengan transform (jalan di GPU), bukan background-position (repaint tiap frame) */
+.sheen::before {
+  content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 300%;
   background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.3) 48%, transparent 60%);
-  background-size: 300% 100%; mix-blend-mode: screen; animation: sheen 6s ease-in-out infinite;
+  animation: sheen 6s ease-in-out infinite; will-change: transform;
 }
-/* hentikan animasi yang memicu repaint terus-menerus saat zoom */
-.app:not([data-scene='intro']) .sheen { animation-play-state: paused; }
-@keyframes sheen { 0% { background-position: 120% 0; } 60%, 100% { background-position: -60% 0; } }
+/* hentikan animasi yang tidak perlu saat zoom / login */
+.app:not([data-scene='intro']) .sheen::before,
+.app:not([data-scene='intro']) .lamp-halo,
+.app:not([data-scene='intro']) .lamp-bulb { animation-play-state: paused; }
+@keyframes sheen { 0% { transform: translateX(-80%); } 60%, 100% { transform: translateX(40%); } }
 
 .label {
   position: absolute; left: 88px; top: 146px; width: 84px; height: 30px;
@@ -337,10 +342,7 @@ body {
   filter: drop-shadow(0 6px 10px rgba(170, 70, 50, 0.22)) blur(var(--bl, 0px));
   animation: bloom 1.5s cubic-bezier(0.1, 0.75, 0.25, 1) var(--d, 0s) both;
 }
-.fl-svg {
-  display: block; width: 100%; height: 100%; overflow: visible;
-  animation: sway var(--sw, 7s) ease-in-out infinite alternate;
-}
+.fl-svg { display: block; width: 100%; height: 100%; overflow: visible; }
 @keyframes bloom {
   from {
     transform: translate(calc(-50% + var(--fx, -60vw)), calc(-50% + var(--fy, 0vh))) rotate(calc(var(--r) - 140deg)) scale(0.45);
@@ -349,12 +351,7 @@ body {
   35% { opacity: var(--o, 1); }
   to { transform: translate(-50%, -50%) rotate(var(--r)) scale(1); opacity: var(--o, 1); }
 }
-@keyframes sway {
-  from { transform: rotate(calc(var(--dir, 1) * -4deg)); }
-  to { transform: rotate(calc(var(--dir, 1) * 4deg)); }
-}
 @media (prefers-reduced-motion: reduce) {
-  .fl-svg { animation: none; }
   .lamp-halo, .lamp-bulb { animation: none; }
 }
 .card, .reset { z-index: 1; }
