@@ -7,6 +7,14 @@ import {
   getSprite, createSpray, particlePos, drawTarget,
 } from './utils/spray.js'
 
+
+/* =====================================================================
+   Angély Parfums — Cinematic perfume intro → login
+   Seluruh partikel digambar di SATU canvas. Kamera virtual (camX, camY,
+   zoom) yang bergerak; partikel tidak pernah bergerak ke arah kamera.
+   React hanya menyimpan state scene (5 kali berubah), bukan per-frame.
+   ===================================================================== */
+
 const MQ = '(max-width: 720px), (max-aspect-ratio: 4/5)'
 
 /* ------------------------------- app ------------------------------- */
@@ -19,6 +27,7 @@ export default function App() {
   const rafRef = useRef(0)
   const sim = useRef(null)
   const view = useRef({ W: 1, H: 1, dpr: 1 })
+  const lowQRef = useRef(false) // true = perangkat lemah -> resolusi canvas diturunkan ke 1x
 
   const canvasRef = useRef(null)
   const roomRef = useRef(null)
@@ -45,7 +54,7 @@ export default function App() {
     const onResize = () => {
       const W = window.innerWidth
       const H = window.innerHeight
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
+      const dpr = lowQRef.current ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)
       const c = canvasRef.current
       c.width = Math.round(W * dpr)
       c.height = Math.round(H * dpr)
@@ -76,7 +85,6 @@ export default function App() {
     function tick(now) {
       const sm = sim.current
       if (!sm) return
-      const { W, H, dpr } = view.current
       const canvas = canvasRef.current
       const ctx = canvas.getContext('2d')
       const dt = clamp((now - sm.last) / 1000, 0.001, 0.05)
@@ -85,6 +93,16 @@ export default function App() {
 
       sm.ema = sm.ema * 0.95 + dt * 0.05
       sm.frames++
+
+      // Kualitas adaptif: kalau rata-rata frame > ~24ms (di bawah ~42fps), turunkan resolusi canvas ke 1x.
+      // Perangkat yang kuat tidak terpengaruh (tetap tajam di 1.5x).
+      if (!lowQRef.current && sm.frames > 20 && sm.ema > 0.024 && view.current.dpr > 1) {
+        lowQRef.current = true
+        view.current.dpr = 1
+        canvas.width = view.current.W
+        canvas.height = view.current.H
+      }
+      const { W, H, dpr } = view.current
 
       const { cam, axis, spray: sp, tmp } = sm
 
