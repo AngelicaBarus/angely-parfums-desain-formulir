@@ -52,6 +52,8 @@ function makeFlora() {
         fx: -(x + 25),
         fy: (62 - y) * 0.5,
         delay: 0.05 + Math.min(1, Math.max(0, x / 100)) * 1.1 + rng() * 0.25,
+        // (sway & swayDir tetap dipanggil agar urutan angka acak -> letak bunga TIDAK berubah;
+        //  animasi goyangnya sendiri sudah dihapus karena berat)
         sway: 5 + rng() * 5,
         swayDir: rng() < 0.5 ? 1 : -1,
         blur: rng() < 0.3 ? (rng() * blurMax).toFixed(1) : 0,
@@ -166,11 +168,7 @@ export default function FloraBackground({ active = true }) {
             '--lf': f.lf,
           }}
         >
-          <svg
-            viewBox="-50 -50 100 100"
-            className="fl-svg"
-            style={{ '--sw': `${f.sway.toFixed(1)}s`, '--dir': f.swayDir }}
-          >
+          <svg viewBox="-50 -50 100 100" className="fl-svg">
             <use href={`#fl-${f.type}`} />
           </svg>
         </span>
